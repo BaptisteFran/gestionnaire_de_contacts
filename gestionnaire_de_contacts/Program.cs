@@ -53,34 +53,20 @@ public class GestionnaireDeContacts
                     option = "";
                     break;
                 case "2":
-                    Console.WriteLine("Enter a search option :");
-                    Console.WriteLine("1. Search contact by full name :");
-                    Console.WriteLine("2. Search contact by first name :");
-                    Console.WriteLine("3. Search contact by last name :");
-                    string contactSearchOption = Console.ReadLine();
-                    switch (contactSearchOption)
-                    {
-                        case "1":
-                            Console.WriteLine("Enter contact full name: ");
-                            string contactFullName = Console.ReadLine();
-                            GetContacts(contacts, fullname: contactFullName);
-                            break;
-                        case "2":
-                            Console.WriteLine("Enter contact first name: ");
-                            string contactFirstName = Console.ReadLine();
-                            GetContacts(contacts, firstName: contactFirstName);
-                            break;
-                        case "3":
-                            Console.WriteLine("Enter contact last name: ");
-                            string contactLastName = Console.ReadLine();
-                            GetContacts(contacts, lastName: contactLastName);
-                            break;
-                    }
+                    Console.WriteLine("Enter the first name, last name or full name of a contact :");
+                    string search = Console.ReadLine();
+                    GetContacts(contacts, search);
                     option = "";
                     break;
                 case "3":
+                    Console.WriteLine("Enter the first name, last name or full name of a contact :");
+                    string searchEdit = Console.ReadLine();
+                    EditContact(contacts, searchEdit);
                     break;
                 case "4":
+                    Console.WriteLine("Enter the first name, last name or full name of a contact :");
+                    string searchDelete = Console.ReadLine();
+                    DeleteContact(contacts, searchDelete);
                     break;
                 case "5":
                     running = false;
@@ -89,9 +75,9 @@ public class GestionnaireDeContacts
         }
     }
 
-    public static bool SetContacts(List<Contact> contacts, string firstName, string lastName, string phone)
+    private static bool SetContacts(List<Contact> contacts, string firstName, string lastName, string phone)
     {
-        Contact contact = Contact.Create(firstName, lastName, phone);
+        var contact = Contact.Create(firstName, lastName, phone);
         try
         {
             contacts.Add(contact);
@@ -105,60 +91,100 @@ public class GestionnaireDeContacts
         }
     }
 
-    public static void GetContacts(List<Contact> contacts, string firstName = null, string lastName = null, string fullname = null)
+    private static Contact GetContacts(List<Contact> contacts, string search)
+    {
+        Contact contact = null;
+        if (contacts.Count == 0)
+        {
+            throw new Exception("There are no contacts");
+        }
+        
+        if (string.IsNullOrEmpty(search))
+        {
+            throw new Exception("You must enter at least one contact first/last name or full name");
+        }
+       
+        string[] names = search.Split(' ');
+        try
+        {
+            contact = contacts.Find(contact =>
+                contact.FirstName == names[0] || contact.LastName == names[1] ||
+                contact.FirstName == names[1] || contact.LastName == names[0]);
+            Console.WriteLine("Contact found : ");
+            DisplayContact(contact);
+        }
+        catch (Exception e)
+        {
+            throw new ArgumentException("There was an error getting the contact : " + e.Message);
+        }
+        return contact;
+    }
+
+    private static void EditContact(List<Contact> contacts, string search = null)
     {
         if (contacts.Count == 0)
         {
             throw new Exception("There are no contacts");
         }
         
-        if (string.IsNullOrEmpty(firstName) && string.IsNullOrEmpty(lastName) && string.IsNullOrEmpty(fullname))
+        if (string.IsNullOrEmpty(search))
         {
             throw new Exception("You must enter at least one contact first/last name or full name");
         }
-
-        if (!string.IsNullOrEmpty(fullname))
+        
+        var contact = GetContacts(contacts, search);
+        contacts.Remove(contact);
+        
+        string[] editOptions = ["1", "2", "3", "4"];
+        Console.WriteLine("Choose an option to update the contact :");
+        Console.WriteLine("1. Edit first name");
+        Console.WriteLine("2. Edit last name");
+        Console.WriteLine("3. Edit phone number");
+        Console.WriteLine("4. Exit");
+        string editOption = Console.ReadLine();
+        if (!editOptions.Contains(editOption))
         {
-            string[] names = fullname.Split(',');
-            try
-            {
-                var contact = contacts.Find(contact =>
-                    contact.FirstName == names[0] && contact.LastName == names[1] ||
-                    contact.FirstName == names[1] && contact.LastName == names[0]);
-                Console.WriteLine("Contact found by full name: ");
-                DisplayContact(contact);
-            }
-            catch (Exception e)
-            {
-                throw new ArgumentException("There was an error getting the contact : " + e.Message);
-            }
-        } 
-        if (!string.IsNullOrEmpty(lastName))
-        {
-            try
-            {
-                var contact = contacts.Find(contact => contact.LastName == lastName);
-                Console.WriteLine("Contact found by last name :");
-                DisplayContact(contact);
-            }
-            catch (Exception e)
-            {
-                throw new ArgumentException("There was an error getting the contact : " + e.Message);
-            }
-        } 
-        if (!string.IsNullOrEmpty(firstName))
-        {
-            try
-            {
-                var contact = contacts.Find(contact => contact.FirstName == firstName);
-                Console.WriteLine("Contact found by first name :");
-                DisplayContact(contact);
-            }
-            catch (Exception e)
-            {
-                throw new ArgumentException("There was an error getting the contact : " + e.Message);
-            }
+            Console.WriteLine("Please enter a valid option :");
+            editOption = Console.ReadLine();
         }
+
+        switch (editOption)
+        {
+            case "1":
+                Console.WriteLine("Enter contact first name: ");
+                string editFirstName = Console.ReadLine();
+                contact.FirstName = editFirstName;
+                break;
+            case "2":
+                Console.WriteLine("Enter contact last name: ");
+                string editLastName = Console.ReadLine();
+                contact.LastName = editLastName;
+                break;
+            case "3":
+                Console.WriteLine("Enter contact phone number: ");
+                string editPhone = Console.ReadLine();
+                contact.Phone = editPhone;
+                break;
+            case "4":
+                break;
+        }
+        contacts.Add(contact);
+    }
+
+    private static void DeleteContact(List<Contact> contacts, string search = null)
+    {
+        if (contacts.Count == 0)
+        {
+            throw new Exception("There are no contacts");
+        }
+        
+        if (string.IsNullOrEmpty(search))
+        {
+            throw new Exception("You must enter at least one contact first/last name or full name");
+        }
+        
+        var contact = GetContacts(contacts, search);
+        contacts.Remove(contact);
     }
 
     private static void DisplayContact(Contact contact)
